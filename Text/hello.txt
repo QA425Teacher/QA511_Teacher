@@ -5,3 +5,4 @@ Ivanov ("hello QA511")
 Потехин СС: print("\nВидимо сделал ДЗ:")
 Губанова: работа на уроке 29.11.2025
 Коренев print(''.join([chr(i) for i in range(1040, 1040+32)]))
+Баймуханова "Hello, neighbor"
