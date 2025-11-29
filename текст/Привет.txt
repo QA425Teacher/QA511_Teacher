@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+lab3_xor_otp.py
+Выполняет:
+ - Задание 1: XOR-шифрование с повторяющимся ключом (текст, UTF-8)
+ - Задание 2: Одноразовый блокнот (OTP) для русского текста
+ - Задание 3: Одноразовый блокнот (OTP) для бинарных данных
+Сохраняет результаты в папку ./lab3_output
+"""
+
+import os
+import base64
+import argparse
+from typing import Tuple
+
+def xor_encrypt(data: bytes, key: bytes) -> bytes:
+    """XOR-шифрование с повторяющимся ключом"""
+    if len(key) == 0:
+        raise ValueError("Key must be non-empty")
+    return bytes([b ^ key[i % len(key)] for i, b in enumerate(data)])
+
+def otp_encrypt(data: bytes, pad: bytes) -> bytes:
+    """Одноразовый блокнот — pad должен быть не короче data"""
+    if len(pad) < len(data):
+        raise ValueError("Pad is too short for OTP")
+    return bytes([b ^ pad[i] for i, b in enumerate(data)])
+
+def save_bytes(path: str, data: bytes) -> None:
+    with open(path, "wb") as f:
+        f.write(data)
+
+def read_text_utf8_from_user(prompt: str, default: str) -> str:
+    """Простая функция: возвращает default (можно заменить для ввода)"""
+    # Для автоматического запуска вернём default. Если хотите — измените на input().
+    return default
+
+def ensure_dir(path: str) -> None:
+    os.makedirs(path, exist_ok=True)
+
+def summarize_folder(path: str) -> None:
+    print("\nСодержимое папки результатов:")
+    for fname in sorted(os.listdir(path)):
+        fp = os.path.join(path, fname)
+        try:
+            size = os.path.getsize(fp)
+        except OSError:
+            size = 0
+        print(f" - {fname} — {size} байт")
+
+def main(output_dir: str):
+    ensure_dir(output_dir)
+    results = []
+
+    # ------------------
+    # Задание 1: XOR с повторяющимся ключом
+    # ------------------
+    text1 = read_text_utf8_from_user("Текст для XOR (UTF-8):", "Привет! Это тестовое сообщение для XOR-шифрования.")
+    data1 = text1.encode("utf-8")
+    # Пример короткого ключа (байты). Можно заменить на любую последовательность байт.
+    key1 = bytes([0x05, 0x09, 0x0C])  # пример: 3-байтовый ключ
+    enc1 = xor_encrypt(data1, key1)
+    dec1 = xor_encrypt(enc1, key1)  # симметрично
+
+    # Сохранение
+    path_open1 = os.path.join(output_dir, "xor_open.txt")
+    path_enc1 = os.path.join(output_dir, "xor_encrypted.bin")
+    save_bytes(path_open1, data1)
+    save_bytes(path_enc1, enc1)
+
+    assert dec1 == data1, "Ошибка: дешифрование XOR не восстановило исходный текст!"
+    results.append(("XOR", text1, base64.b64encode(enc1).decode("ascii"), path_enc1))
+
+    # ------------------
+    # Задание 2: OTP для русского текста
+    # ------------------
+    text2 = read_text_utf8_from_user("Текст для OTP (русский):", "Это секретное сообщение на русском языке.")
+    data2 = text2.encode("utf-8")
+    pad2 = os.urandom(len(data2))  # случайный одноразовый блокнот
+    enc2 = otp_encrypt(data2, pad2)
+    dec2 = otp_encrypt(enc2, pad2)
+    assert dec2 == data2, "Ошибка: дешифрование OTP (русский) не восстановило исходный текст!"
+
+    # Сохранение
+    path_open2 = os.path.join(output_dir, "otp_open_ru.txt")
+    path_pad2 = os.path.join(output_dir, "otp_pad_ru.bin")
+    path_enc2 = os.path.join(output_dir, "otp_encrypted_ru.bin")
+    save_bytes(path_open2, data2)
+    save_bytes(path_pad2, pad2)
+    save_bytes(path_enc2, enc2)
+
+    results.append(("OTP_ru", text2, base64.b64encode(enc2).decode("ascii"), path_enc2, path_pad2))
+
+    # ------------------
+    # Задание 3: OTP для бинарных данных
+    # ------------------
+    binary_data = bytes(range(256))  # пример входных данных: 0..255
+    pad3 = os.urandom(len(binary_data))
+    enc3 = otp_encrypt(binary_data, pad3)
+    dec3 = otp_encrypt(enc3, pad3)
+    assert dec3 == binary_data, "Ошибка: дешифрование OTP (бинарные) не восстановило данные!"
+
+    # Сохранение
+    path_bin_open = os.path.join(output_dir, "binary_open.bin")
+    path_pad3 = os.path.join(output_dir, "otp_pad_binary.bin")
+    path_enc3 = os.path.join(output_dir, "otp_encrypted_binary.bin")
+    save_bytes(path_bin_open, binary_data)
+    save_bytes(path_pad3, pad3)
+    save_bytes(path_enc3, enc3)
+
+    results.append(("OTP_bin", f"{len(binary_data)} байт", base64.b64encode(enc3[:64]).decode("ascii") + "...", path_enc3, path_pad3))
+
+    # ------------------
+    # Формирование текстового отчёта
+    # ------------------
+    report_lines = []
+    report_lines.append("Лабораторная работа №3 — Отчёт\n")
+    report_lines.append("Выполненные задания:\n")
+    report_lines.append("1) XOR-шифрование (повторяющийся ключ). Файлы: xor_open.txt, xor_encrypted.bin\n")
+    report_lines.append("2) Одноразовый блокнот (русский текст). Файлы: otp_open_ru.txt, otp_pad_ru.bin, otp_encrypted_ru.bin\n")
+    report_lines.append("3) Одноразовый блокнот для двоичных данных. Файлы: binary_open.bin, otp_pad_binary.bin, otp_encrypted_binary.bin\n\n")
+    report_lines.append("Проверки: для каждого задания выполнено дешифрование и подтверждена идентичность исходных и восстановленных данных.\n\n")
+
+    # Контрольные вопросы (коротко)
+    report_lines.append("Ответы на контрольные вопросы:\n")
+    report_lines.append("1. В чем смысл OTP?\n")
+    report_lines.append("   Использовать полностью случайный, неповторяющийся ключ длиной не короче сообщения, применяемый один раз — это обеспечивает информационную безопасность.\n\n")
+    report_lines.append("2. Что такое XOR-шифрование?\n")
+    report_lines.append("   Побайтовое/побитовое исключающее ИЛИ между открытым текстом и ключом.\n\n")
+    report_lines.append("3. Почему OTP идеален?\n")
+    report_lines.append("   При соблюдении условий шифротекст не даёт информации об исходном тексте — дешифрование без ключа невозможно.\n\n")
+    report_lines.append("4. Достоинства/недостатки OTP\n")
+    report_lines.append("   + абсолютная безопасность; - сложность генерации/распределения/хранения ключей, нельзя повторно использовать.\n\n")
+    report_lines.append("5. Как получить данные, зашифрованные OTP?\n")
+    report_lines.append("   Практически невозможно без ключа. Повторное использование ключа уязвимо для атаки.\n\n")
+    report_lines.append("6. Как получить данные, зашифрованные XOR?\n")
+    report_lines.append("   При коротком/повторяющемся ключе применяют частотный анализ, атаки по известному открытом тексте и т.п.\n\n")
+
+    report_lines.append("Сгенерированные файлы находятся в папке: " + os.path.abspath(output_dir) + "\n")
+
+    report_path = os.path.join(output_dir, "lab3_report.txt")
+    with open(report_path, "w", encoding="utf-8") as rf:
+        rf.write("\n".join(report_lines))
+
+    # ------------------
+    # Вывод результата в консоль
+    # ------------------
+    print("Выполнено: создана папка с результатами ->", os.path.abspath(output_dir))
+    print("\nКраткая сводка по заданиям:")
+    for item in results:
+        if item[0] == "XOR":
+            print("\n--- Задание: XOR ---")
+            print("Оригинал:", item[1])
+            print("Зашифровано (base64):", item[2])
+            print("Файл шифротекста:", item[3])
+        elif item[0] == "OTP_ru":
+            print("\n--- Задание: OTP (русский) ---")
+            print("Оригинал:", item[1])
+            print("Зашифровано (base64):", item[2])
+            print("Файл шифротекста:", item[3])
+            print("Файл блокнота (pad):", item[4])
+        elif item[0] == "OTP_bin":
+            print("\n--- Задание: OTP (бинарные) ---")
+            print("Описание:", item[1])
+            print("Зашифровано (первые 64 байта в base64):", item[2])
+            print("Файл шифротекста:", item[3])
+            print("Файл блокнота (pad):", item[4])
+
+    print("\nОтчёт сохранён в:", report_path)
+    summarize_folder(output_dir)
+    print("\nГотово.")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Lab 3 — XOR и OTP")
+    parser.add_argument("--out", "-o", default="./lab3_output", help="папка для результатов (по умолчанию ./lab3_output)")
+    args = parser.parse_args()
+    main(args.out)
