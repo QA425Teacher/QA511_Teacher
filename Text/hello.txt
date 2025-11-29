@@ -8,3 +8,4 @@ Ivanov ("hello QA511")
 Баймуханова "Hello, neighbor"
 Пшенина: Добрый день
 Жданов(привет)
+Вакарин: print("Hello Teacher")
