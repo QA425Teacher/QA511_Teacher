@@ -6,3 +6,4 @@ Ivanov ("hello QA511")
 Вакарин: print("Hello Teacher")
 Баймуханова hello neighbour
 Шпакова . ДЗ-29 - 1 Выполнила!
+Ладыгин: Cntl+C - Cntl+V - Repet 
