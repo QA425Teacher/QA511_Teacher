@@ -5,3 +5,4 @@ Ivanov ("hello QA511")
 Потехин СС: print("\nВидимо сделал ДЗ:")
 Вакарин: print("Hello Teacher")
 Баймуханова hello neighbour
+Шпакова . ДЗ-29 - 1 Выполнила!
