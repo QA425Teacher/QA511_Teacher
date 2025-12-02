@@ -7,3 +7,4 @@ Ivanov ("hello QA511")
 Баймуханова hello neighbour
 Шпакова . ДЗ-29 - 1 Выполнила!
 Ладыгин: Cntl+C - Cntl+V - Repet 
+Пшенина: Домашняя работа 29-1
